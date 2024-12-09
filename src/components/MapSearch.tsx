@@ -1,92 +1,73 @@
-'use client'
-
-import React, { useState, useEffect, useCallback } from 'react'
-import { Search } from 'lucide-react'
-import { LatLng } from 'leaflet'
+import React, { useState } from 'react';
+import { Search } from 'lucide-react';
+import { LatLng } from 'leaflet';
 
 interface SearchResult {
-  display_name: string
-  lat: string
-  lon: string
+  display_name: string;
+  lat: string;
+  lon: string;
 }
 
 interface MapSearchProps {
-  onLocationSelect: (position: LatLng) => void
+  onLocationSelect: (position: LatLng) => void;
 }
 
 export default function MapSearch({ onLocationSelect }: MapSearchProps) {
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [loading, setLoading] = useState(false)
-  const [showResults, setShowResults] = useState(false)
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showResults, setShowResults] = useState(false);
 
-  const searchLocation = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) return
-
-    setLoading(true)
+  const searchLocation = async (searchQuery: string) => {
+    if (!searchQuery.trim()) return;
+    
+    setLoading(true);
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           searchQuery + ', Angola'
         )}&limit=5`
-      )
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
-      const data = await response.json()
-      setResults(data)
-      setShowResults(true)
+      );
+      const data = await response.json();
+      setResults(data);
+      setShowResults(true);
     } catch (error) {
-      console.error('Error searching location:', error)
-      setResults([])
+      console.error('Error searching location:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (query.trim()) {
-        searchLocation(query)
-      } else {
-        setResults([])
-        setShowResults(false)
-      }
-    }, 500)
-
-    return () => clearTimeout(delayDebounceFn)
-  }, [query, searchLocation])
+  };
 
   const handleSelect = (result: SearchResult) => {
-    const position = new LatLng(parseFloat(result.lat), parseFloat(result.lon))
-    onLocationSelect(position)
-    setQuery(result.display_name)
-    setShowResults(false)
-  }
+    const position = new LatLng(parseFloat(result.lat), parseFloat(result.lon));
+    onLocationSelect(position);
+    setQuery(result.display_name);
+    setShowResults(false);
+  };
 
   return (
-    <div className="relative w-full max-w-md">
+    <div className="relative">
       <div className="flex items-center">
         <div className="relative flex-grow">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && searchLocation(query)}
             placeholder="Pesquisar endereço..."
             className="w-full px-4 py-2 pr-10 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
           <button
             onClick={() => searchLocation(query)}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            aria-label="Search"
           >
             <Search className="h-5 w-5" />
           </button>
         </div>
       </div>
 
-      {(showResults && results.length > 0) && (
-        <div className="relative z-50 w-full mt-1 bg-white rounded-md shadow-lg max-h-60 overflow-auto">
+      {showResults && results.length > 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg max-h-60 overflow-auto">
           {results.map((result, index) => (
             <button
               key={index}
@@ -105,6 +86,5 @@ export default function MapSearch({ onLocationSelect }: MapSearchProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
-
