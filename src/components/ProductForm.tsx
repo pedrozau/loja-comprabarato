@@ -7,9 +7,9 @@ import type { Product } from '../lib/products/types';
 import MultipleImageUpload from './MultipleImageUpload';
 
 interface ProductFormProps {
+  product?: Partial<Product>;
   onClose: () => void;
   onSuccess: () => void;
-  product?: Product;
 }
 
 export default function ProductForm({
@@ -22,6 +22,7 @@ export default function ProductForm({
     name: product?.name || '',
     description: product?.description || '',
     price: product?.price || '',
+    image_urls: product?.image_urls || [],
   });
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>(product?.image_urls || []);
@@ -35,10 +36,11 @@ export default function ProductForm({
         name: formData.name,
         description: formData.description,
         price: Number(formData.price),
-        image_urls: previews,
+        image_url: previews[0] || '',
+        user_id: '',
       };
 
-      if (product) {
+      if (product?.id) {
         await updateProduct(product.id, productData);
         toast.success('Produto atualizado com sucesso!');
       } else {

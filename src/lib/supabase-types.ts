@@ -6,6 +6,8 @@ export interface Product {
   image_url: string | null;
   store_id: string;
   created_at: string;
+  image_urls?: string[];
+  user_id: string;
 }
 
 export interface User {
